@@ -9,6 +9,7 @@ export async function getCategories(req, res) {
 		allCategories = response.rows;
 	} catch (err) {
 		console.log(err);
+        return res.sendStatus(500)
 	}
 
 	res.status(200).send(allCategories);
