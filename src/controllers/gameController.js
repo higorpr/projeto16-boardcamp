@@ -6,9 +6,9 @@ export async function getGames(req, res) {
 	let gamesResponse;
 
 	try {
-        const nameLowered = (name) ? name.toLowerCase() : '';
-			gamesResponse = await connection.query(
-				`
+		const nameLowered = name ? name.toLowerCase() : "";
+		gamesResponse = await connection.query(
+			`
             SELECT
                 games.id, 
                 games.name, 
@@ -28,11 +28,10 @@ export async function getGames(req, res) {
             LIKE
                 $1||'%'
         `,
-				[nameLowered]
-			);
+			[nameLowered]
+		);
 
 		games = gamesResponse.rows;
-
 	} catch (err) {
 		console.log(err);
 		return res.sendStatus(500);
@@ -41,7 +40,25 @@ export async function getGames(req, res) {
 	res.status(200).send(games);
 }
 
-export function postGame(req, res) {
-    
+export async function postGame(req, res) {
+	const { name, image, stockTotal, categoryId, pricePerDay } =
+		res.locals.gameInfo;
+	const gameDataArr = [name, image, stockTotal, categoryId, pricePerDay];
 
+	try {
+		await connection.query(
+			`
+            INSERT INTO 
+                games (name, image, "stockTotal", "categoryId", "pricePerDay") 
+            VALUES 
+                ($1, $2, $3, $4, $5)
+        `,
+			gameDataArr
+		);
+	} catch (err) {
+		console.log(err);
+		return res.sendStatus(500);
+	}
+
+	res.sendStatus(201);
 }
