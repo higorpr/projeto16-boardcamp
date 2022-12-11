@@ -17,23 +17,23 @@ export async function gameValidation(req, res, next) {
 		return res.status(400).send(errors);
 	}
 
-    try {
-        const gameArr = await connection.query(`
+	try {
+		const gameArr = await connection.query(`
             SELECT
                 *
             FROM
                 games
-        `)
+        `);
 
-        const gameNames = gameArr.rows.map((g) => (g.name))
+		const gameNames = gameArr.rows.map((g) => g.name);
 
-        if (gameNames.includes(gameInfo.name)) {
-            return res.status(409).send('Game already registered.')
-        }
-    } catch (err) {
-        console.log(err)
-        return res.sendStatus(500)
-    }
+		if (gameNames.includes(gameInfo.name)) {
+			return res.status(409).send("Game already registered.");
+		}
+	} catch (err) {
+		console.log(err);
+		return res.sendStatus(500);
+	}
 
 	res.locals.gameInfo = gameInfo;
 	next();
