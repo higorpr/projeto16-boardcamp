@@ -9,7 +9,7 @@ export async function getCustomers(req, res) {
 		const customerArr = await connection.query(
 			`
             SELECT
-                *
+                name, phone, cpf, TO_CHAR(birthday,'YYYY-MM-DD') AS birthday
             FROM
                 customers
             WHERE
@@ -34,7 +34,7 @@ export async function getCustomersById(req, res) {
 		const customerArr = await connection.query(
 			`
             SELECT
-                *
+				name, phone, cpf, TO_CHAR(birthday,'YYYY-MM-DD') AS birthday
             FROM
                 customers
             WHERE
@@ -42,8 +42,8 @@ export async function getCustomersById(req, res) {
         `,
 			[id]
 		);
-		console.log(customerArr.rows);
-		customers = customerArr.rows;
+
+		customers = customerArr.rows[0];
 	} catch (err) {
 		console.log(err);
 		return res.sendStatus(500);
@@ -51,20 +51,48 @@ export async function getCustomersById(req, res) {
 	res.status(200).send(customers);
 }
 
-export async function postCustomer(req,res) {
-    const {name, phone, cpf, birthday} = res.locals.customerInfo
-	
-	const customerArray = [name, phone, cpf, birthday]
+export async function postCustomer(req, res) {
+	const { name, phone, cpf, birthday } = res.locals.customerInfo;
+
+	const customerArray = [name, phone, cpf, birthday];
 	try {
-		await connection.query(`
+		await connection.query(
+			`
 			INSERT INTO
 				customers (name, phone, cpf, birthday)
 			VALUES
 				($1, $2, $3, $4)
-		`,customerArray)
+		`,
+			customerArray
+		);
 	} catch (err) {
-		console.log(err)
-		return res.sendStatus(500)
+		console.log(err);
+		return res.sendStatus(500);
 	}
+	res.sendStatus(201);
+}
+
+export async function updateCustomer(req, res) {
+	const { name, phone, cpf, birthday } = res.locals.customerInfo;
+	const { id } = req.params;
+	const updateArr = [name, phone, cpf, birthday, id];
+
+	try {
+		await connection.query(
+			`
+			UPDATE
+				customers
+			SET
+				name=$1, phone=$2, cpf=$3, birthday=$4
+			WHERE
+				id = $5
+		`,
+			updateArr
+		);
+	} catch (err) {
+		console.log(err);
+		res.sendStatus(500);
+	}
+
 	res.sendStatus(200)
 }

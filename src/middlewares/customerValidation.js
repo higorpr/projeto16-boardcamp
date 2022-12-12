@@ -8,29 +8,30 @@ export async function customerValidation(req, res, next) {
 		abortEarly: false,
 	}).error;
 
-	if (validationErrors) {
-		const errors = validationErrors.details.map((e) => e.message);
-		return res.status(400).send(errors);
-	}
+    if (validationErrors) {
+        const errors = validationErrors.details.map((e)=> (e.message))
+        return res.status(400).send(errors)
+    }
 
-	try {
-		const customerCpfs = await connection.query(`
+    try {
+        const customerCpfs = await connection.query(`
             SELECT
                 cpf
             FROM
                 customers
-        `);
+        `)
+        
+        const cpfs = customerCpfs.rows.map((c) => (c.cpf))
+        if (cpfs.includes(customerInfo.cpf)) {
+            return res.sendStatus(409)
+        }
 
-		const cpfs = customerCpfs.rows.map((c) => c.cpf);
-		if (cpfs.includes(customerInfo.cpf)) {
-			return res.sendStatus(409);
-		}
-
-		res.locals.customerInfo = customerInfo;
-	} catch (err) {
-		console.log(err);
-		return res.sendStatus(500);
-	}
+        res.locals.customerInfo = customerInfo
+        
+    } catch (err) {
+        console.log(err)
+        return res.sendStatus(500)
+    }
 
 	next();
 }
