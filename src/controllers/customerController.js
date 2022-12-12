@@ -50,3 +50,21 @@ export async function getCustomersById(req, res) {
 	}
 	res.status(200).send(customers);
 }
+
+export async function postCustomer(req,res) {
+    const {name, phone, cpf, birthday} = res.locals.customerInfo
+	
+	const customerArray = [name, phone, cpf, birthday]
+	try {
+		await connection.query(`
+			INSERT INTO
+				customers (name, phone, cpf, birthday)
+			VALUES
+				($1, $2, $3, $4)
+		`,customerArray)
+	} catch (err) {
+		console.log(err)
+		return res.sendStatus(500)
+	}
+	res.sendStatus(200)
+}

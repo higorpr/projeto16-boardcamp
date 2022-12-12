@@ -1,21 +1,21 @@
 import { connection } from "../database/db.js";
 
-export async function CheckExistingClient(req, res, next) {
+export async function CheckExistingCustomer(req, res, next) {
 	const { id } = req.params;
 	let checkedId = "";
 
 	if (id && Number(id)) {
 		try {
-			const clientArr = await connection.query(`
+			const customerArr = await connection.query(`
                 SELECT
                     *
                 FROM
                     customers
             `);
 
-			const clientIds = clientArr.rows.map((c) => c.id);
+			const customerIds = customerArr.rows.map((c) => c.id);
 
-			if (!clientIds.includes(Number(id))) {
+			if (!customerIds.includes(Number(id))) {
 				return res.sendStatus(404);
 			}
 
