@@ -201,4 +201,20 @@ export async function finishRental(req, res) {
 	res.sendStatus(200);
 }
 
-export async function deleteRental(req, res) {}
+export async function deleteRental(req, res) {
+    const id = res.locals.id
+
+    try {
+        await connection.query(`
+            DELETE FROM
+                rentals 
+            WHERE
+                id = $1
+
+        `, [id])
+    } catch (err) {
+        console.log(err)
+        res.sendStatus(500)
+    }
+    res.sendStatus(200)
+}
