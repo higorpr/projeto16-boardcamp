@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+import "dayjs/locale/pt-br.js";
 import { connection } from "../database/db.js";
 
 export async function getRentals(req, res) {
@@ -78,29 +80,71 @@ export async function getRentals(req, res) {
 	}
 }
 
-// SELECT rentals,*, row_to_json(c) AS customer, row_to_json(g) as game
-// FROM (
-//     SELECT
-//         g.id, g.name, g."categoryId", category.name AS "categoryName"
-//     FROM
-//         games g
-//     JOIN
-//         categories
-//     ON
-//         games."categoryId" = categories.id
-//     ) g
-// JOIN
-//     (SELECT
-//         rentals.*, row_to_json(c) AS customer
-//     FROM (
-//         SELECT
-//             id, name
-//         FROM
-//             customers
-//         ) c
-//     JOIN
-//         rentals
-//     ON
-//         c.id = rentals."customerId")
-// ON
-//     rentals."gameId" = g.id
+export async function postRental(req, res) {
+	const { customerId, gameId, daysRented } = res.locals.rentalInfo;
+	const returnDate = null;
+	const delayFee = null;
+	const rentDate = dayjs().format("YYYY-MM-DD");
+
+	const openRents = await connection.query(
+		`
+        SELECT
+            *
+        FROM
+            rentals
+        WHERE
+            rentals."gameId" = $1
+    `,
+		[gameId]
+	);
+
+	const rentedCopies = openRents.rows.length;
+
+	const stockedGames = await connection.query(
+		`
+        SELECT
+            *
+        FROM
+            games
+        WHERE
+            games.id = $1
+    `,
+		[gameId]
+	);
+
+	const stock = stockedGames.rows[0].stockTotal;
+	const priceperDay = stockedGames.rows[0].pricePerDay;
+	const originalPrice = daysRented * priceperDay;
+
+	if (rentedCopies >= stock) {
+		return res.sendStatus(400);
+	}
+
+	try {
+		const rentalArray = [
+			customerId,
+			gameId,
+			rentDate,
+			daysRented,
+			returnDate,
+			originalPrice,
+			delayFee,
+		];
+
+        await connection.query(`
+            INSERT INTO
+                rentals ("customerId", "gameId", "rentDate", "daysRented", "returnDate", "originalPrice", "delayFee")
+            VALUES
+                ($1, $2, $3, $4, $5, $6, $7)
+        `, rentalArray)
+	} catch (err) {
+        console.log(err)
+        return res.sendStatus(500)
+    }
+
+	res.sendStatus(201);
+}
+
+export async function finishRental(req, res) {}
+
+export async function deleteRental(req, res) {}
